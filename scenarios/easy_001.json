@@ -1,0 +1,157 @@
+{
+  "scenario_id": "easy_001",
+  "scenario_name": "Operation Ghost Patient",
+  "difficulty": "easy",
+  "total_days": 5,
+  "total_budget": 10,
+  "max_actions_per_day": 3,
+  "domains": ["healthcare"],
+  "entities": {
+    "H-101": {
+      "label": "LifeCare Hospital Pvt Ltd",
+      "domain": "healthcare",
+      "type": "hospital",
+      "location": "Nagpur"
+    },
+    "D-101": {
+      "label": "Dr. Suresh Patil (Credential ID)",
+      "domain": "healthcare",
+      "type": "doctor",
+      "location": "Nagpur"
+    }
+  },
+  "events": [
+    {
+      "event_id": "E01",
+      "day": 1,
+      "domain": "healthcare",
+      "signal_type": "hospital_registration",
+      "entity_id": "H-101",
+      "location": "Nagpur",
+      "metadata": {
+        "registration_age_days": 12,
+        "beds_claimed": 80,
+        "pmjay_empanelment_applied": true,
+        "owner_previous_hospital": "closed_2021",
+        "specialization": "multi-specialty"
+      },
+      "solo_suspicion_score": 0.3,
+      "truth_status": "real",
+      "visibility": "full",
+      "note": "New hospital, owner had previous closed hospital. Alone — borderline normal."
+    },
+    {
+      "event_id": "E02",
+      "day": 2,
+      "domain": "healthcare",
+      "signal_type": "pmjay_claim_filed",
+      "entity_id": "H-101",
+      "location": "Nagpur",
+      "metadata": {
+        "claim_amount": 95000,
+        "patient_stay_claimed_days": 14,
+        "actual_admission_records_days": 1,
+        "procedure_code": "SRG-202",
+        "performing_doctor": "D-101",
+        "doctor_specialization": "general_medicine",
+        "procedure_requires": "orthopedic_surgeon"
+      },
+      "solo_suspicion_score": 0.85,
+      "truth_status": "real",
+      "visibility": "full",
+      "note": "General medicine doctor billing orthopedic surgery — obvious specialization mismatch."
+    },
+    {
+      "event_id": "E03",
+      "day": 3,
+      "domain": "healthcare",
+      "signal_type": "duplicate_procedure_codes",
+      "entity_id": "H-101",
+      "location": "Nagpur",
+      "metadata": {
+        "claims_filed_today": 8,
+        "unique_procedure_codes": 1,
+        "same_code_repeated": "SRG-202",
+        "patient_ids": "sequential_IDs",
+        "total_amount_today": 760000
+      },
+      "solo_suspicion_score": 0.95,
+      "truth_status": "real",
+      "visibility": "full",
+      "note": "Copy-paste fraud — identical claims filed in bulk with sequential patient IDs."
+    },
+    {
+      "event_id": "E04",
+      "day": 4,
+      "domain": "healthcare",
+      "signal_type": "claim_amount_spike",
+      "entity_id": "H-101",
+      "location": "Nagpur",
+      "metadata": {
+        "total_claims_this_week": 23,
+        "total_amount": 2185000,
+        "hospital_age_days": 16,
+        "avg_claims_new_hospital_benchmark": 3,
+        "ratio_vs_benchmark": 7.6,
+        "pmjay_flag": "auto_audit_triggered"
+      },
+      "solo_suspicion_score": 0.98,
+      "truth_status": "real",
+      "visibility": "full",
+      "note": "16-day-old hospital filing 23 claims worth 21L — mathematically impossible volume."
+    },
+    {
+      "event_id": "E05",
+      "day": 5,
+      "domain": "healthcare",
+      "signal_type": "patient_verification_failed",
+      "entity_id": "H-101",
+      "location": "Nagpur",
+      "metadata": {
+        "patients_contacted": 5,
+        "patients_confirmed_admission": 0,
+        "patients_never_heard_of_hospital": 5,
+        "cross_check_method": "aadhaar_linked_mobile"
+      },
+      "solo_suspicion_score": 1.0,
+      "truth_status": "real",
+      "visibility": "full",
+      "note": "Confirmed ghost patients — fraud fully visible. All 5 patients deny admission."
+    }
+  ],
+  "ground_truth": {
+    "fraud_ring_entities": ["H-101", "D-101"],
+    "decoy_entities": [],
+    "attack_starts_day": 2,
+    "staging_window": [1, 1],
+    "optimal_prediction_day": 3,
+    "optimal_action_sequence": [
+      {"day": 2, "action": "FLAG_SUSPICIOUS", "target": "H-101"},
+      {"day": 3, "action": "FLAG_SUSPICIOUS", "target": "D-101"},
+      {"day": 3, "action": "PREDICT_ATTACK", "targets": ["H-101", "D-101"]},
+      {"day": 4, "action": "FREEZE_ENTITY", "target": "H-101"}
+    ],
+    "optimal_budget_used": 5,
+    "must_not_freeze": []
+  },
+  "grader": {
+    "prediction_timing_score": {
+      "day_1_to_3": 1.0,
+      "day_4": 0.6,
+      "day_5": 0.2,
+      "no_prediction": 0.0
+    },
+    "entity_detection_score": {
+      "both_entities_flagged": 1.0,
+      "one_entity_flagged": 0.5,
+      "none_flagged": 0.0
+    },
+    "budget_efficiency_bonus": {
+      "used_5_or_less": 0.2,
+      "used_6_to_8": 0.1,
+      "used_9_to_10": 0.0
+    },
+    "decoy_penalty": 0.0,
+    "final_score_formula": "0.5 * prediction_timing + 0.4 * entity_detection + 0.1 * budget_efficiency"
+  }
+}

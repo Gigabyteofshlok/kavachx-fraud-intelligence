@@ -1,0 +1,640 @@
+{
+    "scenario_id": "hard_001",
+    "scenario_name": "Operation Ghost Ring",
+    "difficulty": "hard",
+    "total_days": 15,
+    "total_budget": 6,
+    "max_actions_per_day": 2,
+    "domains": [
+        "healthcare",
+        "finance",
+        "defence"
+    ],
+    "adversarial_features": [
+        "whistleblower_trap",
+        "domain_blackout",
+        "retroactive_revision",
+        "near_duplicate_entity_id",
+        "simultaneous_multi_domain_hit",
+        "timing_trap"
+    ],
+    "entities": {
+        "H-441": {
+            "label": "MediCore Hospital Pvt Ltd",
+            "domain": "healthcare",
+            "type": "hospital",
+            "location": "Pune"
+        },
+        "H-442": {
+            "label": "CityHeal Clinic",
+            "domain": "healthcare",
+            "type": "hospital",
+            "location": "Nagpur"
+        },
+        "V-887": {
+            "label": "PharmaShield Supplies",
+            "domain": "defence",
+            "type": "vendor",
+            "location": "Pune",
+            "note": "REAL fraud vendor. Near-duplicate of V-8B7."
+        },
+        "V-8B7": {
+            "label": "PharmaShield Solutions",
+            "domain": "defence",
+            "type": "vendor",
+            "location": "Mumbai",
+            "is_decoy": true,
+            "note": "DECOY — near-duplicate ID to V-887. Capital B vs digit 8. Legitimate vendor."
+        },
+        "D-221": {
+            "label": "Dr. Rakesh Nair (Credential ID)",
+            "domain": "healthcare",
+            "type": "doctor",
+            "location": "Pune"
+        },
+        "A-001": {
+            "label": "Account XX-4471",
+            "domain": "finance",
+            "type": "bank_account",
+            "location": "Pune"
+        },
+        "A-002": {
+            "label": "Account XX-9983",
+            "domain": "finance",
+            "type": "bank_account",
+            "location": "Pune"
+        },
+        "A-003": {
+            "label": "Account XX-1120",
+            "domain": "finance",
+            "type": "shell_account",
+            "location": "Mumbai"
+        },
+        "DECOY-01": {
+            "label": "HealthFirst NGO",
+            "domain": "healthcare",
+            "type": "ngo",
+            "location": "Nashik",
+            "is_decoy": true,
+            "note": "DECOY — looks suspicious. Freezing this wastes 3 budget units + penalty."
+        }
+    },
+    "events": [
+        {
+            "event_id": "E01",
+            "day": 1,
+            "domain": "healthcare",
+            "signal_type": "hospital_registration",
+            "entity_id": "H-441",
+            "location": "Pune",
+            "metadata": {
+                "registration_age_days": 18,
+                "beds_claimed": 120,
+                "specialization": "multi-specialty",
+                "pmjay_empanelment_applied": true
+            },
+            "solo_suspicion_score": 0.2,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "New hospital in Pune — alone this is normal."
+        },
+        {
+            "event_id": "E02",
+            "day": 2,
+            "domain": "finance",
+            "signal_type": "account_opened",
+            "entity_id": "A-001",
+            "location": "Pune",
+            "metadata": {
+                "account_age_days": 5,
+                "linked_mobile": "98XXXXXX21",
+                "initial_deposit": 500,
+                "upi_registered": true,
+                "kyc_type": "minimal"
+            },
+            "solo_suspicion_score": 0.15,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "New account opened in Pune — alone this is normal."
+        },
+        {
+            "event_id": "E03",
+            "day": 3,
+            "domain": "defence",
+            "signal_type": "vendor_registration",
+            "entity_id": "V-887",
+            "location": "Pune",
+            "metadata": {
+                "gst_number": "27AABCP4221K1Z3",
+                "gst_status": "active",
+                "previous_firm_gst": "27AABCP4221K1Z3",
+                "previous_firm_status": "dissolved_2022",
+                "product_category": "PPE_kits_medical_consumables",
+                "defence_empanelment_applied": true
+            },
+            "solo_suspicion_score": 0.45,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "GST number recycled from dissolved firm — FIRST real signal."
+        },
+        {
+            "event_id": "E04",
+            "day": 4,
+            "domain": "finance",
+            "signal_type": "upi_test_transactions",
+            "entity_id": "A-001",
+            "location": "Pune",
+            "metadata": {
+                "transactions": [
+                    {
+                        "amount": 1,
+                        "to": "random_merchant"
+                    },
+                    {
+                        "amount": 2,
+                        "to": "random_merchant"
+                    },
+                    {
+                        "amount": 1,
+                        "to": "random_merchant"
+                    }
+                ],
+                "pattern": "account_warming"
+            },
+            "solo_suspicion_score": 0.3,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Small test transactions — account warming pattern."
+        },
+        {
+            "event_id": "E05",
+            "day": 4,
+            "domain": "healthcare",
+            "signal_type": "ngo_registration",
+            "entity_id": "DECOY-01",
+            "location": "Nashik",
+            "metadata": {
+                "registration_age_days": 45,
+                "80g_certified": true,
+                "pmjay_interest": false,
+                "annual_report_filed": true,
+                "donor_count": 120
+            },
+            "solo_suspicion_score": 0.25,
+            "is_decoy": true,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "DECOY — looks slightly suspicious but is a legitimate NGO. Budget-waste trap."
+        },
+        {
+            "event_id": "E06",
+            "day": 5,
+            "domain": "healthcare",
+            "signal_type": "doctor_credential_reactivated",
+            "entity_id": "D-221",
+            "location": "Pune",
+            "metadata": {
+                "credential_dormant_years": 3,
+                "specialization": "general_medicine",
+                "newly_linked_hospitals": [
+                    "H-441",
+                    "H-442"
+                ],
+                "both_linked_same_day": true,
+                "hospital_cities": [
+                    "Pune",
+                    "Nagpur"
+                ]
+            },
+            "solo_suspicion_score": 0.55,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Dormant credential reactivated AND linked to 2 hospitals in 2 different cities same day — STRONG signal."
+        },
+        {
+            "event_id": "E07",
+            "day": 6,
+            "domain": "defence",
+            "signal_type": "procurement_invoice_submitted",
+            "entity_id": "V-887",
+            "location": "Pune",
+            "metadata": {
+                "invoice_amount": 480000,
+                "product": "PPE_kits",
+                "buyer": "Military_Hospital_Pune",
+                "payment_destination_account": "A-001",
+                "delivery_proof": "pending"
+            },
+            "solo_suspicion_score": 0.5,
+            "truth_status": "real",
+            "visibility": "full",
+            "cross_domain_link": {
+                "entity": "A-001",
+                "domain": "finance",
+                "note": "Defence payment going to same account as E02 — CRITICAL LINK V-887 → A-001"
+            },
+            "note": "Defence invoice payment routes to same account opened Day 2."
+        },
+        {
+            "event_id": "E08",
+            "day": 6,
+            "domain": "defence",
+            "signal_type": "near_duplicate_vendor_flag",
+            "entity_id": "V-8B7",
+            "location": "Mumbai",
+            "metadata": {
+                "gst_number": "27AABCQ5112J1Z8",
+                "gst_status": "active",
+                "product_category": "medical_equipment",
+                "defence_empanelment_applied": true,
+                "note": "Legitimate vendor — V-8B7 vs V-887. Capital B vs digit 8."
+            },
+            "solo_suspicion_score": 0.3,
+            "is_decoy": true,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "NEAR-DUPLICATE DECOY — V-8B7 is legitimate. Only V-887 is the fraud vendor."
+        },
+        {
+            "event_id": "E09",
+            "day": 7,
+            "domain": "healthcare",
+            "signal_type": "second_hospital_registration",
+            "entity_id": "H-442",
+            "location": "Nagpur",
+            "metadata": {
+                "registration_age_days": 22,
+                "beds_claimed": 90,
+                "pmjay_empanelment_applied": true,
+                "linked_doctor": "D-221",
+                "same_doctor_as_H441": true
+            },
+            "solo_suspicion_score": 0.4,
+            "truth_status": "real",
+            "visibility": "full",
+            "cross_domain_link": {
+                "entity": "D-221",
+                "note": "Same doctor credential linking hospitals in Pune and Nagpur"
+            },
+            "note": "Second hospital — different city — same doctor credential as H-441."
+        },
+        {
+            "event_id": "E10",
+            "day": 8,
+            "domain": "healthcare",
+            "signal_type": "pmjay_claim_filed",
+            "entity_id": "H-441",
+            "location": "Pune",
+            "metadata": {
+                "claim_amount": 145000,
+                "patient_stay_claimed_days": 18,
+                "actual_admission_records_days": 2,
+                "procedure_code": "SRG-441",
+                "performing_doctor": "D-221",
+                "doctor_specialization": "general_medicine",
+                "procedure_requires": "cardiothoracic_surgeon"
+            },
+            "solo_suspicion_score": 0.9,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "EXECUTION BEGINS — General medicine doctor billing cardiothoracic surgery."
+        },
+        {
+            "event_id": "E11",
+            "day": 9,
+            "domain": "healthcare",
+            "signal_type": "anonymous_tip_received",
+            "entity_id": "DECOY-01",
+            "location": "Nashik",
+            "metadata": {
+                "source": "anonymous_whistleblower",
+                "claim": "HealthFirst NGO is laundering PMJAY funds through shell accounts",
+                "evidence_provided": "forged_payment_records",
+                "credibility_score": "high_surface_level",
+                "actual_validity": "false_plant"
+            },
+            "solo_suspicion_score": 0.7,
+            "is_decoy": true,
+            "truth_status": "fake",
+            "visibility": "contradictory",
+            "note": "WHISTLEBLOWER TRAP — Anonymous tip pointing to the decoy NGO. Evidence is forged. Agents that FREEZE DECOY-01 after this will waste 3 budget + 0.4 penalty."
+        },
+        {
+            "event_id": "E12",
+            "day": 9,
+            "domain": "finance",
+            "signal_type": "large_upi_transfer",
+            "entity_id": "A-001",
+            "location": "Pune",
+            "metadata": {
+                "amount": 145000,
+                "to_account": "A-002",
+                "transfer_time": "02:47 AM",
+                "amount_matches_pmjay_claim": true
+            },
+            "solo_suspicion_score": 0.8,
+            "truth_status": "real",
+            "visibility": "full",
+            "cross_domain_link": {
+                "entity": "H-441",
+                "domain": "healthcare",
+                "amount_match": true,
+                "note": "Amount exactly matches Day 8 PMJAY claim from H-441"
+            },
+            "note": "Cashout begins — exact amount match with PMJAY claim."
+        },
+        {
+            "event_id": "E13",
+            "day": 10,
+            "domain": "healthcare",
+            "signal_type": "pmjay_claim_filed",
+            "entity_id": "H-442",
+            "location": "Nagpur",
+            "metadata": {
+                "claim_amount": 145000,
+                "procedure_code": "SRG-441",
+                "performing_doctor": "D-221",
+                "note": "IDENTICAL procedure code and amount as H-441 claim on Day 8"
+            },
+            "solo_suspicion_score": 0.95,
+            "truth_status": "real",
+            "visibility": "full",
+            "cross_domain_link": {
+                "entity": "H-441",
+                "note": "Mirror claim — different city — same doctor — same procedure code"
+            },
+            "note": "Mirror fraud — second hospital filing identical claim in different city."
+        },
+        {
+            "event_id": "E14",
+            "day": 11,
+            "domain": "finance",
+            "signal_type": "domain_blackout",
+            "entity_id": "A-002",
+            "location": "unknown",
+            "metadata": {
+                "status": "signals_unavailable",
+                "reason": "banking_api_maintenance",
+                "expected_resume_day": 13,
+                "note": "Finance domain signals are unavailable for Days 11-12. Agent must reason with incomplete information."
+            },
+            "solo_suspicion_score": 0.0,
+            "truth_status": "uncertain",
+            "visibility": "partial",
+            "note": "DOMAIN BLACKOUT — Finance signals go silent Days 11-12. Agent must maintain belief without new signals."
+        },
+        {
+            "event_id": "E15",
+            "day": 11,
+            "domain": "defence",
+            "signal_type": "second_procurement_invoice",
+            "entity_id": "V-887",
+            "location": "Nagpur",
+            "metadata": {
+                "invoice_amount": 520000,
+                "buyer": "Military_Hospital_Nagpur",
+                "payment_destination_account": "A-002",
+                "delivery_proof": "pending",
+                "note": "Same vendor — different city — payment to A-002 this time"
+            },
+            "solo_suspicion_score": 0.9,
+            "truth_status": "real",
+            "visibility": "full",
+            "cross_domain_link": {
+                "entities": [
+                    "V-887",
+                    "H-442",
+                    "A-002"
+                ],
+                "note": "Vendor + Hospital + Account converging in Nagpur — full ring visible"
+            },
+            "note": "Full ring visible now — Pune and Nagpur coordinated."
+        },
+        {
+            "event_id": "E16",
+            "day": 12,
+            "domain": "finance",
+            "signal_type": "domain_blackout_continued",
+            "entity_id": "A-002",
+            "location": "unknown",
+            "metadata": {
+                "status": "signals_unavailable",
+                "note": "Finance domain blackout continues Day 12."
+            },
+            "solo_suspicion_score": 0.0,
+            "truth_status": "uncertain",
+            "visibility": "partial",
+            "note": "DOMAIN BLACKOUT continues — Day 12. No finance signals."
+        },
+        {
+            "event_id": "E17",
+            "day": 13,
+            "domain": "finance",
+            "signal_type": "shell_account_activation",
+            "entity_id": "A-003",
+            "location": "Mumbai",
+            "metadata": {
+                "account_dormant_years": 2,
+                "receiving_transfer_from": "A-002",
+                "amount": 280000,
+                "note": "A-001 → A-002 → A-003 layering"
+            },
+            "solo_suspicion_score": 0.85,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Finance resumes: 3-layer money laundering A-001 → A-002 → A-003."
+        },
+        {
+            "event_id": "E18",
+            "day": 13,
+            "domain": "healthcare",
+            "signal_type": "retroactive_record_correction",
+            "entity_id": "H-441",
+            "location": "Pune",
+            "metadata": {
+                "corrected_event": "E01",
+                "original_signal": "registration_age_days: 18",
+                "corrected_signal": "registration_age_days: 95",
+                "reason": "data_entry_error_correction",
+                "actual_validity": "falsified_by_ring",
+                "note": "Ring retroactively corrected H-441 registration date to look established"
+            },
+            "solo_suspicion_score": 0.3,
+            "truth_status": "fake",
+            "visibility": "contradictory",
+            "note": "RETROACTIVE REVISION — E01 now looks less suspicious. Agents that fully trust this revision will reduce suspicion on H-441 incorrectly."
+        },
+        {
+            "event_id": "E19",
+            "day": 13,
+            "domain": "defence",
+            "signal_type": "delivery_dispute",
+            "entity_id": "V-887",
+            "location": "Pune",
+            "metadata": {
+                "invoice_amount": 480000,
+                "delivery_confirmed": false,
+                "military_complaint": "PPE kits never delivered",
+                "vendor_response": "in_transit"
+            },
+            "solo_suspicion_score": 0.95,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Day 13: Simultaneous multi-domain hit — agent has only 2 actions. Prioritize wisely."
+        },
+        {
+            "event_id": "E20",
+            "day": 14,
+            "domain": "finance",
+            "signal_type": "crypto_transfer",
+            "entity_id": "A-003",
+            "location": "unknown",
+            "metadata": {
+                "amount": 680000,
+                "destination": "crypto_exchange_unregistered",
+                "transaction_time": "11:58 PM",
+                "chain": "tron"
+            },
+            "solo_suspicion_score": 1.0,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Final cashout — money leaving Indian banking system into unregistered crypto."
+        },
+        {
+            "event_id": "E21",
+            "day": 15,
+            "domain": "healthcare",
+            "signal_type": "accounts_go_dark",
+            "entity_id": "H-441",
+            "location": "Pune",
+            "metadata": {
+                "hospital_phone": "unreachable",
+                "address_verification": "failed",
+                "pmjay_portal_status": "inactive",
+                "note": "Ring vanishes"
+            },
+            "solo_suspicion_score": 1.0,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Ring disappears — too late to act. Episode ends."
+        }
+    ],
+    "ground_truth": {
+        "fraud_ring_entities": [
+            "H-441",
+            "H-442",
+            "V-887",
+            "D-221",
+            "A-001",
+            "A-002",
+            "A-003"
+        ],
+        "decoy_entities": [
+            "DECOY-01",
+            "V-8B7"
+        ],
+        "attack_starts_day": 8,
+        "staging_window": [
+            1,
+            7
+        ],
+        "critical_link_events": [
+            "E03",
+            "E06",
+            "E07",
+            "E09"
+        ],
+        "adversarial_traps": {
+            "whistleblower_trap_day": 9,
+            "domain_blackout_days": [
+                11,
+                12
+            ],
+            "retroactive_revision_day": 13,
+            "near_duplicate_entity": {
+                "real": "V-887",
+                "decoy": "V-8B7"
+            },
+            "simultaneous_hit_day": 13
+        },
+        "optimal_prediction_day": 7,
+        "optimal_action_sequence": [
+            {
+                "day": 5,
+                "action": "FLAG_SUSPICIOUS",
+                "target": "D-221"
+            },
+            {
+                "day": 6,
+                "action": "LINK_ENTITIES",
+                "targets": [
+                    "V-887",
+                    "A-001"
+                ]
+            },
+            {
+                "day": 7,
+                "action": "PREDICT_ATTACK",
+                "targets": [
+                    "H-441",
+                    "H-442",
+                    "V-887"
+                ]
+            },
+            {
+                "day": 8,
+                "action": "FREEZE_ENTITY",
+                "target": "A-001"
+            },
+            {
+                "day": 9,
+                "action": "FREEZE_ENTITY",
+                "target": "D-221"
+            }
+        ],
+        "optimal_budget_used": 9,
+        "must_not_freeze": [
+            "DECOY-01",
+            "V-8B7"
+        ]
+    },
+    "grader": {
+        "prediction_timing_score": {
+            "day_1_to_7": 1.0,
+            "day_8_to_9": 0.7,
+            "day_10_to_11": 0.4,
+            "day_12_to_13": 0.2,
+            "day_14_to_15": 0.05,
+            "no_prediction": 0.0
+        },
+        "entity_linking_score": {
+            "all_3_domains_linked": 1.0,
+            "2_domains_linked": 0.6,
+            "1_domain_only": 0.2,
+            "no_links": 0.0
+        },
+        "entity_detection_score": {
+            "both_entities_flagged": 1.0,
+            "one_entity_flagged": 0.5,
+            "partial_detection": 0.25,
+            "none_flagged": 0.0
+        },
+        "budget_efficiency_bonus": {
+            "used_4_or_less": 0.2,
+            "used_5_to_6": 0.1,
+            "used_7_or_more": 0.0
+        },
+        "decoy_penalty": -0.4,
+        "belief_calibration": {
+            "well_calibrated_bonus": 0.15,
+            "overconfident_wrong_penalty": -0.1
+        },
+        "information_efficiency_bonus": {
+            "used_2_or_less": 0.15,
+            "used_3_to_4": 0.08,
+            "used_5": 0.0
+        },
+        "contradiction_handling_bonus": 0.10,
+        "final_score_formula": "0.32*timing + 0.28*linking + 0.12*detection + 0.08*belief + 0.05*info + 0.05*contradiction + 0.10*budget - decoy_penalty"
+    }
+}

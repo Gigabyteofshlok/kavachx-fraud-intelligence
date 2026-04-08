@@ -1,0 +1,31 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kavach-x"
+version = "2.0.0"
+description = "Multi-Domain Cross-Sector Fraud Intelligence Environment — OpenEnv Hackathon"
+readme = "README.md"
+license = { text = "MIT" }
+requires-python = ">=3.10"
+keywords = ["openenv", "fraud-detection", "reinforcement-learning", "llm-evaluation"]
+
+dependencies = [
+    "openenv-core>=0.2.0",
+    "openai>=1.0.0",
+    "numpy>=1.24.0",
+    "gymnasium>=0.29.0",
+    "pydantic>=2.0.0",
+    "fastapi>=0.110.0",
+    "uvicorn[standard]>=0.27.0",
+]
+
+[project.scripts]
+server = "server.app:main"
+
+[project.optional-dependencies]
+dev = ["pytest", "httpx"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["."]

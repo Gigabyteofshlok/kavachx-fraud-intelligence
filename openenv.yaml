@@ -1,0 +1,125 @@
+schema_version: "1.0"
+
+environment:
+  name: "KAVACH-X"
+  version: "2.0.0"
+  description: >
+    Multi-Domain Cross-Sector Fraud Intelligence Environment.
+    AI agents act as fraud analysts receiving signals across Healthcare,
+    Finance, and Defence simultaneously. Must predict coordinated fraud
+    attacks BEFORE they execute under limited budget and action constraints.
+    Features per-entity belief state, contradiction handling, and audit system.
+  team: "Team Kavach"
+  license: "MIT"
+  tags:
+    - fraud-detection
+    - multi-domain
+    - pre-crime-prediction
+    - budget-constrained
+    - belief-state
+    - openenv
+    - india
+    - healthcare
+    - finance
+    - defence
+
+api_standards:
+  gymnasium_version: ">=0.29.0"
+  observation_space: "Box(0.0, 1.0, (48,), float32)"
+  action_space: "Discrete(9)"
+  pydantic_models:
+    observation: "KavachObservation"
+    action: "KavachAction"
+    reward: "KavachReward"
+
+actions:
+  0: "IGNORE"                # Cost 0 — No action
+  1: "FLAG_SUSPICIOUS"       # Cost 1 — Mark entity suspicious
+  2: "LINK_ENTITIES"         # Cost 2 — Connect two entities cross-domain
+  3: "FREEZE_ENTITY"         # Cost 3 — Freeze account/credential/vendor
+  4: "PREDICT_ATTACK"        # Cost 4 — Raise coordinated attack prediction
+  5: "REQUEST_AUDIT"         # Cost 2 — Trigger audit (resolves in 2 days, ↑confidence)
+  6: "CROSS_VERIFY"          # Cost 2 — Immediate confidence boost on entity
+  7: "DELAY_DECISION"        # Cost 1 — Explicitly pass the day
+  8: "FLAG_FOR_MONITORING"   # Cost 1 — Future signals on entity weighted higher
+
+observation:
+  shape: [48]
+  dtype: float32
+  description: >
+    48-dimensional float vector.
+    [0]   day_progress (current_day / total_days)
+    [1]   budget_remaining_fraction
+    [2]   actions_used_today_fraction
+    [3-12]  per-entity max suspicion score (up to 10 entities)
+    [13-22] per-entity flagged indicator
+    [23] domain_healthcare active
+    [24] domain_finance active
+    [25] domain_defence active
+    [26] signals_today (normalized)
+    [27-30] reserved
+    [31] time_to_predicted_attack_fraction
+    [32] belief mean_fraud_prob across entities
+    [33] belief max_fraud_prob across entities
+    [34] belief mean_confidence across entities
+    [35] belief entropy (uncertainty measure)
+    [36] pending_audits count (normalized)
+    [37] contradiction_flag (0 or 1)
+    [38-47] reserved
+
+tasks:
+  - task_id: "kavach-easy"
+    name: "Operation Ghost Patient"
+    difficulty: "easy"
+    scenario_file: "scenarios/easy_001.json"
+    domains: ["healthcare"]
+    total_days: 5
+    total_budget: 10
+    max_actions_per_day: 3
+    expected_score_range: [0.75, 0.92]
+
+  - task_id: "kavach-medium"
+    name: "Operation UPI Phantom"
+    difficulty: "medium"
+    scenario_file: "scenarios/medium_001.json"
+    domains: ["healthcare", "finance"]
+    total_days: 10
+    total_budget: 8
+    max_actions_per_day: 2
+    expected_score_range: [0.35, 0.55]
+
+  - task_id: "kavach-hard"
+    name: "Operation Ghost Ring"
+    difficulty: "hard"
+    scenario_file: "scenarios/hard_001.json"
+    domains: ["healthcare", "finance", "defence"]
+    total_days: 15
+    total_budget: 6
+    max_actions_per_day: 2
+    expected_score_range: [0.05, 0.18]
+
+evaluation:
+  scoring_range: [0.0, 1.0]
+  components:
+    - prediction_timing
+    - entity_detection
+    - entity_linking
+    - belief_calibration
+    - information_efficiency
+    - contradiction_handling
+    - budget_efficiency
+    - decoy_penalty
+
+adaptive_curriculum:
+  promote_threshold: 0.80
+  demote_threshold: 0.50
+
+server:
+  framework: "fastapi"
+  port: 7860
+  endpoints:
+    - "POST /reset"
+    - "POST /step"
+    - "GET /state"
+    - "GET /tasks"
+    - "GET /health"

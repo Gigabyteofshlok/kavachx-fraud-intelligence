@@ -1,0 +1,329 @@
+{
+    "scenario_id": "medium_001",
+    "scenario_name": "Operation UPI Phantom",
+    "difficulty": "medium",
+    "total_days": 10,
+    "total_budget": 8,
+    "max_actions_per_day": 2,
+    "domains": [
+        "healthcare",
+        "finance"
+    ],
+    "entities": {
+        "H-221": {
+            "label": "Medicare Plus Hospital",
+            "domain": "healthcare",
+            "type": "hospital",
+            "location": "Pune"
+        },
+        "A-331": {
+            "label": "Account YY-7723",
+            "domain": "finance",
+            "type": "bank_account",
+            "location": "Pune"
+        },
+        "A-332": {
+            "label": "Account YY-8834",
+            "domain": "finance",
+            "type": "shell_account",
+            "location": "Mumbai"
+        },
+        "DECOY-02": {
+            "label": "Sunrise Pharmacy",
+            "domain": "healthcare",
+            "type": "pharmacy",
+            "location": "Pune",
+            "is_decoy": true,
+            "note": "New pharmacy. Looks suspicious but is legitimate. Penalize agent if frozen."
+        }
+    },
+    "events": [
+        {
+            "event_id": "E01",
+            "day": 1,
+            "domain": "healthcare",
+            "signal_type": "hospital_pmjay_empanelment",
+            "entity_id": "H-221",
+            "location": "Pune",
+            "metadata": {
+                "registration_age_days": 30,
+                "beds_claimed": 60,
+                "empanelment_fast_tracked": true,
+                "approval_time_days": 4,
+                "normal_approval_days": 21
+            },
+            "solo_suspicion_score": 0.25,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Empanelment approved unusually fast. Alone — borderline normal."
+        },
+        {
+            "event_id": "E02",
+            "day": 2,
+            "domain": "finance",
+            "signal_type": "account_opened",
+            "entity_id": "A-331",
+            "location": "Pune",
+            "metadata": {
+                "account_age_days": 3,
+                "linked_business_name": "Medicare Plus Hospital",
+                "upi_registered": true,
+                "initial_deposit": 1000,
+                "kyc_type": "minimal"
+            },
+            "solo_suspicion_score": 0.2,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Hospital opens bank account — alone this is normal."
+        },
+        {
+            "event_id": "E03",
+            "day": 3,
+            "domain": "healthcare",
+            "signal_type": "pharmacy_registration",
+            "entity_id": "DECOY-02",
+            "location": "Pune",
+            "metadata": {
+                "registration_age_days": 20,
+                "drug_license": "valid",
+                "gst_filed": true,
+                "pmjay_interest": false,
+                "annual_turnover_estimate": 800000
+            },
+            "solo_suspicion_score": 0.2,
+            "is_decoy": true,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "DECOY — legitimate new pharmacy. Freezing this entity will incur penalty."
+        },
+        {
+            "event_id": "E04",
+            "day": 4,
+            "domain": "finance",
+            "signal_type": "upi_micro_transactions",
+            "entity_id": "A-331",
+            "location": "Pune",
+            "metadata": {
+                "transactions": [
+                    {
+                        "amount": 1,
+                        "time": "11:02 PM",
+                        "to": "random_merchant"
+                    },
+                    {
+                        "amount": 2,
+                        "time": "11:04 PM",
+                        "to": "random_merchant"
+                    },
+                    {
+                        "amount": 1,
+                        "time": "11:07 PM",
+                        "to": "random_merchant"
+                    }
+                ],
+                "pattern": "account_warming_late_night",
+                "transaction_count": 3
+            },
+            "solo_suspicion_score": 0.35,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Late-night micro transactions — classic account-warming signal."
+        },
+        {
+            "event_id": "E05",
+            "day": 5,
+            "domain": "healthcare",
+            "signal_type": "pmjay_claim_filed",
+            "entity_id": "H-221",
+            "location": "Pune",
+            "metadata": {
+                "claim_amount": 112000,
+                "patient_stay_claimed_days": 12,
+                "actual_records_days": 3,
+                "procedure_code": "CARD-118",
+                "payment_destination": "A-331",
+                "note": "Claim payment going directly to A-331"
+            },
+            "solo_suspicion_score": 0.65,
+            "truth_status": "real",
+            "visibility": "full",
+            "cross_domain_link": {
+                "entity": "A-331",
+                "domain": "finance",
+                "note": "PMJAY payment routed to account opened 3 days before empanelment — CRITICAL"
+            },
+            "note": "Cross-domain signal: healthcare payment routes to suspicious finance account."
+        },
+        {
+            "event_id": "E06",
+            "day": 6,
+            "domain": "finance",
+            "signal_type": "large_transfer",
+            "entity_id": "A-331",
+            "location": "Pune",
+            "metadata": {
+                "amount": 112000,
+                "to_account": "A-332",
+                "transfer_time": "01:23 AM",
+                "amount_matches_claim": true,
+                "delay_hours": 18
+            },
+            "solo_suspicion_score": 0.8,
+            "truth_status": "real",
+            "visibility": "full",
+            "cross_domain_link": {
+                "entity": "H-221",
+                "domain": "healthcare",
+                "amount_match": true,
+                "note": "Exact PMJAY claim amount — transferred within 24 hours at 1AM"
+            },
+            "note": "Money moved immediately after claim — amount matches exactly."
+        },
+        {
+            "event_id": "E07",
+            "day": 7,
+            "domain": "healthcare",
+            "signal_type": "second_pmjay_claim",
+            "entity_id": "H-221",
+            "location": "Pune",
+            "metadata": {
+                "claim_amount": 112000,
+                "procedure_code": "CARD-118",
+                "patient_id": "PT-00823",
+                "note": "Identical amount and procedure code as Day 5 claim"
+            },
+            "solo_suspicion_score": 0.9,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Mirror claim — identical to first claim. Pattern confirmed."
+        },
+        {
+            "event_id": "E08",
+            "day": 8,
+            "domain": "finance",
+            "signal_type": "shell_account_activity",
+            "entity_id": "A-332",
+            "location": "Mumbai",
+            "metadata": {
+                "account_dormant_years": 1,
+                "receiving_from": "A-331",
+                "amount": 224000,
+                "account_holder": "alias_entity",
+                "note": "Dormant account suddenly receives consolidated amount"
+            },
+            "solo_suspicion_score": 0.85,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "2-layer laundering: A-331 → A-332."
+        },
+        {
+            "event_id": "E09",
+            "day": 9,
+            "domain": "healthcare",
+            "signal_type": "patient_verification_failed",
+            "entity_id": "H-221",
+            "location": "Pune",
+            "metadata": {
+                "patients_contacted": 4,
+                "confirmed_admission": 1,
+                "ghost_patient_rate": 0.75,
+                "verification_method": "phone_aadhaar"
+            },
+            "solo_suspicion_score": 0.95,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Ghost patient confirmation — 75% of patients deny admission."
+        },
+        {
+            "event_id": "E10",
+            "day": 10,
+            "domain": "finance",
+            "signal_type": "account_closure_attempt",
+            "entity_id": "A-331",
+            "location": "Pune",
+            "metadata": {
+                "closure_requested": true,
+                "balance_at_closure": 0,
+                "reason_given": "business_restructuring",
+                "note": "Account emptied and closure requested — ring disappearing"
+            },
+            "solo_suspicion_score": 1.0,
+            "truth_status": "real",
+            "visibility": "full",
+            "note": "Too late — money already moved. Ring erasing its tracks."
+        }
+    ],
+    "ground_truth": {
+        "fraud_ring_entities": [
+            "H-221",
+            "A-331",
+            "A-332"
+        ],
+        "decoy_entities": [
+            "DECOY-02"
+        ],
+        "attack_starts_day": 5,
+        "staging_window": [
+            1,
+            4
+        ],
+        "critical_link_events": [
+            "E05",
+            "E06"
+        ],
+        "optimal_prediction_day": 6,
+        "optimal_action_sequence": [
+            {
+                "day": 4,
+                "action": "FLAG_SUSPICIOUS",
+                "target": "A-331"
+            },
+            {
+                "day": 5,
+                "action": "LINK_ENTITIES",
+                "targets": [
+                    "H-221",
+                    "A-331"
+                ]
+            },
+            {
+                "day": 6,
+                "action": "PREDICT_ATTACK",
+                "targets": [
+                    "H-221",
+                    "A-331"
+                ]
+            },
+            {
+                "day": 7,
+                "action": "FREEZE_ENTITY",
+                "target": "A-332"
+            }
+        ],
+        "optimal_budget_used": 7,
+        "must_not_freeze": [
+            "DECOY-02"
+        ]
+    },
+    "grader": {
+        "prediction_timing_score": {
+            "day_1_to_6": 1.0,
+            "day_7_to_8": 0.6,
+            "day_9": 0.3,
+            "day_10": 0.1,
+            "no_prediction": 0.0
+        },
+        "entity_linking_score": {
+            "both_domains_linked": 1.0,
+            "one_domain_only": 0.4,
+            "no_links": 0.0
+        },
+        "budget_efficiency_bonus": {
+            "used_5_or_less": 0.2,
+            "used_6_to_7": 0.1,
+            "used_8": 0.0
+        },
+        "decoy_penalty": -0.3,
+        "final_score_formula": "0.4 * prediction_timing + 0.4 * entity_linking + 0.1 * budget_efficiency - 0.3 * decoy_frozen"
+    }
+}
