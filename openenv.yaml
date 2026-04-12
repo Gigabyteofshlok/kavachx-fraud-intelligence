@@ -98,6 +98,9 @@ tasks:
     max_actions_per_day: 2
     expected_score_range: [0.05, 0.18]
 
+  - id: "hard_plus"
+    description: "Four-domain phantom ring: near-duplicate hospital IDs, conflicting audit trails, mole insider, crypto cashout — tightest budget, maximum deception"
+
 evaluation:
   scoring_range: [0.0, 1.0]
   components:

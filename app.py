@@ -18,6 +18,7 @@ from pydantic import BaseModel
 import uvicorn
 
 from environment import KavachAction, KavachObservation, KavachXEnv
+from grader import KavachXGrader
 
 # ── App setup ─────────────────────────────────────────────────────────────────
 app = FastAPI(
@@ -140,6 +141,14 @@ async def step(req: StepRequest) -> JSONResponse:
         action_dict["targets"] = req.targets
 
     obs, reward, terminated, truncated, info = env.step(action_dict)
+
+    if terminated:
+        grader = KavachXGrader(env.scenario)
+        grade_result = grader.grade(
+            action_history=env.action_history,
+            prediction_made_day=env.current_day if env.prediction_made else None
+        )
+        info["grade_result"] = grade_result
 
     return JSONResponse(
         status_code=200,

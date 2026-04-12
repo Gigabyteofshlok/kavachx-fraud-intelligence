@@ -50,7 +50,7 @@ TASKS = [
     },
     {
         "task_name": "kavach-hard",
-        "scenario":  os.path.join(SCENARIOS_DIR, "hard_001.json"),
+        "scenario":  os.path.join(SCENARIOS_DIR, "hard_002.json"),
         "difficulty": "hard",
     },
 ]
@@ -119,15 +119,18 @@ def _build_prompt(info: Dict[str, Any]) -> str:
     beliefs = info.get("belief_state", {})
     top_beliefs = sorted(beliefs.items(), key=lambda x: x[1].get('fraud_prob', 0.0), reverse=True)[:5]
     belief_str = " | ".join(f"{e}={v.get('fraud_prob', 0.0):.2f}" for e, v in top_beliefs)
+    all_entities = list(info.get('belief_state', {}).keys())
+    entity_list_str = ', '.join(all_entities)
 
     return (
         f"DAY {info['day']} | Budget remaining: {info['budget_remaining']} | "
         f"Actions left today: {info['actions_left_today']}\n\n"
+        f"VALID ENTITY IDs (use ONLY these exact IDs): {entity_list_str}\n\n"
         f"TODAY'S SIGNALS:\n{sig_lines if sig_lines else '  (no new signals)'}\n\n"
         f"BELIEF STATE (top suspects): {belief_str}\n"
         f"Flagged: {info.get('flagged', [])} | Frozen: {info.get('frozen', [])}\n"
         f"Linked pairs: {info.get('linked', [])}\n\n"
-        f"What is your next action? Reply with JSON only."
+        f"What is your next action? Reply with JSON only. Use ONLY the entity IDs listed above."
     )
 
 
@@ -189,8 +192,8 @@ def _parse_action(llm_out: str, info: Dict[str, Any]) -> Dict[str, Any]:
 
     # Predict if confident and budget allows
     if budget >= 4 and len(top_suspects) >= 2:
-        top_prob = beliefs.get(top_suspects[0], {}).get('fraud_prob', 0.0)
-        if top_prob > 0.6 and len(flagged) >= 1:
+        top_prob = beliefs.get(top_suspects[0], {}).get("fraud_prob", 0.0)
+        if top_prob > 0.45 and len(flagged) >= 1:
             return {"action_type": "PREDICT_ATTACK", "targets": top_suspects[:3]}
 
     # Try to link two high-suspect entities from different domains

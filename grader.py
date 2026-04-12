@@ -216,7 +216,7 @@ class KavachXGrader:
     def grade(
         self,
         action_history: List[Dict],
-        prediction_day: Optional[int] = None,
+        prediction_made_day: Optional[int] = None,
     ) -> Dict[str, Any]:
         """
         Grade a completed episode. Returns final_score in [0.0, 1.0].
@@ -227,8 +227,8 @@ class KavachXGrader:
         flagged, frozen, linked, budget_used, audits_used, monitor_count, pred_day = \
             self._parse_history(action_history)
 
-        if prediction_day is not None and pred_day is None:
-            pred_day = prediction_day
+        if prediction_made_day is not None and pred_day is None:
+            pred_day = prediction_made_day
 
         # ── All 8 components ─────────────────────────────────────────────────
         t_score  = self._score_timing(pred_day)
@@ -272,6 +272,33 @@ class KavachXGrader:
 
         final_score = round(float(max(0.0, min(1.0, raw))), 4)
 
+        timing_score = t_score
+        linking_score = l_score
+        detection_score = d_score
+        belief_score = b_score
+        info_bonus = i_score
+        contradiction_bonus = c_score
+        budget_bonus = bu_score
+        prediction_made_day = pred_day
+        decoy_entities = decoys
+
+        score_breakdown_readable = (
+            f"KAVACH-X Score Breakdown\n"
+            f"========================\n"
+            f"Prediction Timing  (weight 0.32): {timing_score:.3f}  → contribution {0.32 * timing_score:.3f}\n"
+            f"Entity Linking     (weight 0.28): {linking_score:.3f}  → contribution {0.28 * linking_score:.3f}\n"
+            f"Entity Detection   (weight 0.12): {detection_score:.3f}  → contribution {0.12 * detection_score:.3f}\n"
+            f"Belief Calibration (weight 0.08): {belief_score:.3f}  → contribution {0.08 * belief_score:.3f}\n"
+            f"Info Efficiency    (weight 0.05): {info_bonus:.3f}  → contribution {0.05 * info_bonus:.3f}\n"
+            f"Contradiction Hdl  (weight 0.05): {contradiction_bonus:.3f}  → contribution {0.05 * contradiction_bonus:.3f}\n"
+            f"Budget Efficiency  (weight 0.10): {budget_bonus:.3f}  → contribution {0.10 * budget_bonus:.3f}\n"
+            f"Decoy Penalty               :  -{decoy_penalty:.3f}\n"
+            f"------------------------\n"
+            f"FINAL SCORE: {max(0.0, min(1.0, raw)):.4f}\n"
+            f"Budget used: {budget_used} | Audits used: {audits_used} | "
+            f"Prediction day: {prediction_made_day} | Decoys frozen: {len(frozen & decoy_entities)}"
+        )
+
         return {
             "final_score": final_score,
             "components": {
@@ -294,4 +321,5 @@ class KavachXGrader:
                 "audits_used":              audits_used,
                 "difficulty":               self.difficulty,
             },
+            "score_breakdown_readable": score_breakdown_readable,
         }
