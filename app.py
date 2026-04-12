@@ -34,7 +34,7 @@ SCENARIOS_DIR = os.path.join(os.path.dirname(os.path.abspath(__file__)), "scenar
 SCENARIO_MAP = {
     "easy":   os.path.join(SCENARIOS_DIR, "easy_001.json"),
     "medium": os.path.join(SCENARIOS_DIR, "medium_001.json"),
-    "hard":   os.path.join(SCENARIOS_DIR, "hard_001.json"),
+    "hard":   os.path.join(SCENARIOS_DIR, "hard_002.json"),
 }
 
 # Global env instance (single-session for HF Space demo)

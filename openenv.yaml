@@ -91,7 +91,7 @@ tasks:
   - task_id: "kavach-hard"
     name: "Operation Ghost Ring"
     difficulty: "hard"
-    scenario_file: "scenarios/hard_001.json"
+    scenario_file: "scenarios/hard_002.json"
     domains: ["healthcare", "finance", "defence"]
     total_days: 15
     total_budget: 6
